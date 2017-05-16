@@ -2,6 +2,7 @@ var request = require('request');
 var cheerio = require('cheerio');
 
 var urlmain = "http://www.maisonsdumonde.com";
+
 var urlPages =
 ["?noFavourite=true&noMea=false&search=&facets%5Bdimensions%5D%5Bminwidth%5D=&facets%5Bdimensions%5D%5Bmaxwidth%5D=&facets%5Bdimensions%5D%5Bminheight%5D=&facets%5Bdimensions%5D%5Bmaxheight%5D=&facets%5Bdimensions%5D%5Bmindepth%5D=&facets%5Bdimensions%5D%5Bmaxdepth%5D=&facets%5Bprices%5D%5Bupdated%5D=",
 "&facets%5Bprices%5D%5Bminprice%5D=",
@@ -40,27 +41,87 @@ function urlListing(html) {
   })
 }
 
+function articleListing(html){
+  var nbArticles = 0;
+  var articles = [];
+  var $ = cheerio.load(html);
+  $("section[id='results'] article a.btns").each(function(i, element){
+    articles.push($(this).attr('href'));
+  });
+  return articles;
+}
+
+function toto(minPrice, maxPrice, updated, page, url, articles, callback){
+  var Pageurl = urlmain + url + urlPages[0] + updated + urlPages[1] + minPrice + urlPages[2] + maxPrice + urlPages[3] + page;
+
+    requestHTML(Pageurl).then(function(html){
+      var $ = cheerio.load(html);
+      var newArticles = articleListing(html);
+      if(newArticles.length == 0){
+          callback(articles);
+      } else {
+        page++;
+        articles = articles.concat(newArticles);
+        console.log(page);
+        toto(minPrice, maxPrice, updated, page, url, articles, callback);
+      }
+  })
+}
+
+toto(minPrice, maxPrice, updated, page, url, [], console.log);
+function test(){
+  return new Promise(function(resolve, reject){
+    resolve();
+  })
+}
+
+GetArticleListing("/FR/fr/meubles/canapes-droits-20b2dff5c48607368137c32bfbafc519.htm");
+
+function GetArticleListing(url){
+  requestHTML(urlmain + url).then(function(html){
+    var $ = cheerio.load(html);
+    var articles = new Array();
+    var minPrice = $("input[id='facets_prices_minprice']").attr('value');
+    var maxPrice = $("input[id='facets_prices_maxprice']").attr('value');
+    var updated = $("input[id='facets_prices_updated']").attr('value');
+
+    var page = 0;
+
+    toto(minPrice, maxPrice, updated, page, url, articles)
+      .then(function() {console.log(articles.length)});
+  })
+}
+
 /*
 function ParsePage(url){
-  return new Promise(function(resolve, reject){
-    requestHTML(urlMain + url).then(function(html){
-    var $ = cheerio.load(html);
-    if($("div.more-product").html() != null){
 
-      var minPrice = $("input[id='facets_prices_minprice']").attr('value');
-      var maxPrice = $("input[id='facets_prices_maxprice']").attr('value');
-      var updated = $("input[id='facets_prices_updated']").attr('value');
-      console.log(minPrice);
-      console.log(maxPrice);
-      console.log(updated);
-    } else
-    })
-  })
+requestHTML(urlMain + url).then(function(html){
+return new Promise(function(resolve, reject){
+var $ = cheerio.load(html);
+if($("div.more-product").html() == null){
+var articles = new Array();
+$("ul[class='sub-3 layer-mobile'] a").each(function(i, element){
+var link = $(this).attr('href');
+var type = link.split("/")[3];
+//TODO remove certain url ? housse fauteils, matelas ect... ???
+if(type == "categorie" || type == "meubles" && !(link in urlList)) urlList.push(link);
+});
+
+} else {
+var minPrice = $("input[id='facets_prices_minprice']").attr('value');
+var maxPrice = $("input[id='facets_prices_maxprice']").attr('value');
+var updated = $("input[id='facets_prices_updated']").attr('value');
+console.log(minPrice);
+console.log(maxPrice);
+console.log(updated);
+}
+})
+})
 }*/
-getArticle("/FR/fr/produits/fiche/paravent-imprime-en-bois-l-120-cm-sea-side-116151.htm");
+
 function getArticle(url){
-    requestHTML(urlmain + url).then(function(html){
-      return new Promise(function(resolve, reject){
+  requestHTML(urlmain + url).then(function(html){
+    return new Promise(function(resolve, reject){
 
       var $ = cheerio.load(html);
       var price = $("span[class='product-price']").text();
@@ -81,7 +142,6 @@ function getArticle(url){
       };
       console.log(metadata);
       setTimeout(function(){ resolve(); }, Math.random()*1000);
-
     })
   })
 }
