@@ -83,6 +83,11 @@ function getArticle(url){
       $("div[class='carouselcontent'] img").each(function(i, element){
         img.push(urlmain + $(this).attr('data-src'));
       });
+      if(img == [] ){
+        $("div[class='carouselcontent hasVideo'] img").each(function(i, element){
+          img.push(urlmain + $(this).attr('data-src'));
+        });
+      }
       var metadata = {
         url: urlmain + url,
         name: name,
