@@ -79,15 +79,7 @@ function getArticle(url){
       var size = $("#description").children("p").eq(1).text();
       var description = $("#description").children("p").eq(2).text();
       if (description == '') description = $("#description").children("p").eq(3).text();
-      var img = new Array();
-      $("div[class='carouselcontent'] img").each(function(i, element){
-        img.push(urlmain + $(this).attr('data-src'));
-      });
-      if( img == []){
-        $("div[class='carouselcontent hasVideo'] img").each(function(i, element){
-          img.push(urlmain + $(this).attr('data-src'));
-        });
-      }
+      var img = $('div[class="picture"] a').attr('href');
       var metadata = {
         url: urlmain + url,
         name: name,
@@ -95,7 +87,7 @@ function getArticle(url){
         ref: ref,
         size: size,
         description: description,
-        img: img
+        img: urlmain + img
       };
       console.log(metadata);
       setTimeout(function(){ resolve(); }, Math.random()*1000);
